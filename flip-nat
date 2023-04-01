@@ -1,0 +1,93 @@
+import telegram
+import random
+
+# Initialize the bot
+bot = telegram.Bot(token=6167941632:AAFnwmgwdEpIIdaUlgbQKi1mSar6k57bd9U)
+
+# Define the initial balance for players
+INITIAL_BALANCE = 100
+
+# Define the minimum and maximum bet amounts
+MIN_BET = 1
+MAX_BET = 5
+
+# Define the commission rate for the NatBank
+COMMISSION_RATE = 0.05
+
+# Initialize the NatBank's balance
+natbank_balance = 0
+
+# Initialize the leaderboard dictionary
+leaderboard = {}
+
+# Define the coin flip function
+def flip_coin():
+    return random.choice(['heads', 'tails'])
+
+# Define the start command handler
+def start(update, context):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    
+    # Add the user to the leaderboard if not already present
+    if user_id not in leaderboard:
+        leaderboard[user_id] = {'username': username, 'score': INITIAL_BALANCE}
+    
+    message = f"Welcome {username}! Your current balance is {leaderboard[user_id]['score']}."
+    context.bot.send_message(chat_id=chat_id, text=message)
+
+# Define the bet command handler
+def bet(update, context):
+    chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    
+    # Add the user to the leaderboard if not already present
+    if user_id not in leaderboard:
+        leaderboard[user_id] = {'username': username, 'score': INITIAL_BALANCE}
+    
+    # Parse the bet amount from the message text
+    try:
+        bet_amount = int(context.args[0])
+    except (IndexError, ValueError):
+        message = f"Invalid bet amount. Please place a bet between {MIN_BET} and {MAX_BET}."
+        context.bot.send_message(chat_id=chat_id, text=message)
+        return
+    
+    # Check if the bet amount is within the allowed range
+    if bet_amount < MIN_BET or bet_amount > MAX_BET:
+        message = f"Invalid bet amount. Please place a bet between {MIN_BET} and {MAX_BET}."
+        context.bot.send_message(chat_id=chat_id, text=message)
+        return
+    
+    # Check if the player has enough score to place the bet
+    if leaderboard[user_id]['score'] < bet_amount:
+        message = f"You don't have enough score to place the bet. Your current balance is {leaderboard[user_id]['score']}."
+        context.bot.send_message(chat_id=chat_id, text=message)
+        return
+    
+    # Flip the coin
+    result = flip_coin()
+    
+    # Update the player's score based on the result of the coin flip
+    if result == 'heads':
+        leaderboard[user_id]['score'] += bet_amount
+    else:
+        leaderboard[user_id]['score'] -= bet_amount
+        natbank_profit = int(bet_amount * COMMISSION_RATE)
+        natbank_balance += natbank_profit
+    
+    # Send the result of the coin flip to the player
+    message = f"The coin landed on {result}."
+    context.bot.send_message(chat_id=chat_id, text=message)
+    
+    # Send the player's updated balance
+    message = f"Your current balance is {leaderboard[user_id]['score']}."
+    context.bot.send_message(chat_id=chat_id, text=message)
+
+# Define the leaderboard command handler
+def leaderboard_handler(update, context):
+    chat_id = update.effective_chat.id
+    
+    # Sort the leaderboard
