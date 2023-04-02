@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const random = require('random');
 
 // Initialize the bot with your bot token
-const bot = new TelegramBot(6167941632:AAFnwmgwdEpIIdaUlgbQKi1mSar6k57bd9U, { polling: true });
+const bot = new TelegramBot('6167941632:AAFnwmgwdEpIIdaUlgbQKi1mSar6k57bd9U', { polling: true });
 
 // Define the initial balance for players
 const INITIAL_BALANCE = 100;
